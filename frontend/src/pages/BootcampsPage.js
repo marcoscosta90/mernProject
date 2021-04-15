@@ -43,7 +43,25 @@ const BootcampsPage = () => {
     const [sliderMax, setSliderMax] = useState(1000);
     const [priceRange, setPriceRange] = useState([25, 75]);
 
+    const [priceOrder, setPriceOrder] = useState("descending")
+
     const [filter, setFilter] = useState("");
+    const [sorting, setSorting] = useState("");
+
+    const updateUIValues = (uiValues) => {
+        setSliderMax(uiValues.maxPrice);
+
+        if (uiValues.filtering.price) {
+            let priceFilter = uiValues.filtering.price;
+
+            setPriceRange([Number(priceFilter.gte), Number(priceFilter.lte)]);
+        }
+
+        if (uiValues.sorting.price) {
+            let priceSort = uiValues.sorting.price;
+            setPriceOrder(priceSort);
+        }
+    }
 
 
     //side effects
@@ -61,6 +79,14 @@ const BootcampsPage = () => {
                     query = filter;
                 }
 
+                if(sorting) {
+                    if(query.length === 0) {
+                        query = `?sort=${sorting}`
+                    } else {
+                        query = query + "&sort=" + sorting;
+                    }
+                }
+
                 const { data } = await axios({
                     method: "GET",
                     url: `/api/v1/bootcamps${query}`,
@@ -69,6 +95,7 @@ const BootcampsPage = () => {
 
                 setBootcamps(data.data)
                 setLoading(false);
+                updateUIValues(data.uiValues);
 
             } catch (error) {
                 if (axios.isCancel(error)) return;
@@ -79,21 +106,21 @@ const BootcampsPage = () => {
         fetchData();
 
         return () => cancel()
-    }, [filter, params]);
+    }, [filter, params, sorting]);
 
- 
-  
+
+
     const handlePriceInputChange = (e, type) => {
         let newRange;
 
-        if (type === 'lower') {     
+        if (type === 'lower') {
             newRange = [...priceRange];
             newRange[0] = Number(e.target.value);
 
             setPriceRange(newRange);
         }
 
-        if (type === 'upper') {          
+        if (type === 'upper') {
             newRange = [...priceRange];
             newRange[1] = Number(e.target.value);
 
@@ -119,9 +146,17 @@ const BootcampsPage = () => {
         history.push(urlFilter);
     }
 
+    const handleSortChange = (e) => {
+        setPriceOrder(e.target.value);
+        if (e.target.value === 'ascending') {
+            setSorting('price')
+        } else if (e.target.value === 'descending') {
+            setSorting('-price')
+        }
+    }
+
     return (
         <Container className={classes.root}>
-
             <Paper className={classes.paper}>
                 <Grid container>
                     <Grid item xs={12} sm={6}>
@@ -171,13 +206,17 @@ const BootcampsPage = () => {
                             <RadioGroup
                                 aria-label="price-order"
                                 name="price-order"
+                                value={priceOrder}
+                                onChange={handleSortChange}
                             >
                                 <FormControlLabel
+                                    value="descending"
                                     disabled={loading}
                                     control={<Radio />}
                                     label="Highest - Lowest"
                                 />
                                 <FormControlLabel
+                                    value="ascending"
                                     disabled={loading}
                                     control={<Radio />}
                                     label="Lowest - Highest"

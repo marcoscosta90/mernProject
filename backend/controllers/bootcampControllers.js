@@ -45,7 +45,7 @@ exports.getAllBootcamps = asyncHandler(async (req, res, next) => {
                 order = 'ascending'
             }
 
-            uiValues.sorting[value.replace('-', "")] = order
+            uiValues.sorting[val.replace('-', "")] = order
         })
 
         const sortByStr = sortByArr.join(' ');
