@@ -50,12 +50,12 @@ const BootcampsPage = () => {
     useEffect(() => {
         let cancel;
 
-        const fetchData = async () => {         
+        const fetchData = async () => {
             setLoading(true);
             try {
                 let query;
 
-                if(params && !filter) {
+                if (params && !filter) {
                     query = params;
                 } else {
                     query = filter;
@@ -71,6 +71,7 @@ const BootcampsPage = () => {
                 setLoading(false);
 
             } catch (error) {
+                if (axios.isCancel(error)) return;
                 console.log(error.response.data);
             }
         }
@@ -80,8 +81,34 @@ const BootcampsPage = () => {
         return () => cancel()
     }, [filter, params]);
 
+ 
+  
+    const handlePriceInputChange = (e, type) => {
+        let newRange;
+
+        if (type === 'lower') {     
+            newRange = [...priceRange];
+            newRange[0] = Number(e.target.value);
+
+            setPriceRange(newRange);
+        }
+
+        if (type === 'upper') {          
+            newRange = [...priceRange];
+            newRange[1] = Number(e.target.value);
+
+            setPriceRange(newRange);
+        }
+    }
+
     const onSliderCommitHandler = (e, newValue) => {
         buildRangeFilter(newValue);
+    }
+
+
+    const onTextFieldCommitHandler = () => {
+        buildRangeFilter(priceRange);
+
     }
 
     const buildRangeFilter = (newValue) => {
@@ -106,6 +133,7 @@ const BootcampsPage = () => {
                                 max={sliderMax}
                                 value={priceRange}
                                 valueLabelDisplay="auto"
+                                disabled={loading}
                                 onChange={(e, newValue) => setPriceRange(newValue)}
                                 onChangeCommitted={onSliderCommitHandler}
                             />
@@ -118,7 +146,9 @@ const BootcampsPage = () => {
                                     variant="outlined"
                                     type="number"
                                     disabled={loading}
-                                    value={0}
+                                    value={priceRange[0]}
+                                    onChange={(e) => handlePriceInputChange(e, "lower")}
+                                    onBlur={onTextFieldCommitHandler}
                                 />
                                 <TextField
                                     size="small"
@@ -127,7 +157,9 @@ const BootcampsPage = () => {
                                     variant="outlined"
                                     type="number"
                                     disabled={loading}
-                                    value={75}
+                                    value={priceRange[1]}
+                                    onChange={(e) => handlePriceInputChange(e, "upper")}
+                                    onBlur={onTextFieldCommitHandler}
                                 />
                             </div>
                         </div>
